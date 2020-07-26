@@ -1,0 +1,12 @@
+# IDEs, editors
+.idea/
+
+# py cache
+*.pyc
+
+# dist
+dist/
+build/
+
+# coverage
+.coverage
