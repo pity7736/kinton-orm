@@ -49,3 +49,36 @@ async def test_get_by_name(db_connection):
     assert category.id == result_id
     assert category.name == 'test name'
     assert category.description == 'test description'
+
+
+@mark.asyncio
+async def test_get_by_id_and_name(db_connection):
+    result_id = await db_connection.fetchval(
+        'insert into categories ("name", "description") values ($1, $2) '
+        'returning id',
+        "test name",
+        "test description"
+    )
+    category = await Category.get(
+        name='test name',
+        description='test description'
+    )
+
+    assert category.id == result_id
+    assert category.name == 'test name'
+    assert category.description == 'test description'
+
+
+@mark.asyncio
+async def test_get_without_params(db_connection):
+    result_id = await db_connection.fetchval(
+        'insert into categories ("name", "description") values ($1, $2) '
+        'returning id',
+        "test name",
+        "test description"
+    )
+    category = await Category.get()
+
+    assert category.id == result_id
+    assert category.name == 'test name'
+    assert category.description == 'test description'
