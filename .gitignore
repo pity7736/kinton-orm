@@ -10,3 +10,6 @@ build/
 
 # coverage
 .coverage
+
+# env files
+.env.test

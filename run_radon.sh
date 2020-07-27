@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-radon cc -a -s -nb kinton
+radon cc -a -s kinton
