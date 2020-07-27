@@ -1,7 +1,7 @@
 from unittest.mock import AsyncMock
 
 import asyncpg
-from pytest import mark
+from pytest import mark, fixture
 
 from kinton import Model, fields
 
@@ -12,11 +12,16 @@ class Category(Model):
     _description = fields.CharField()
 
 
-@mark.asyncio
-async def test_get_by_id(db_connection, mocker):
+@fixture
+def db_connection(db_connection, mocker):
     connection_mock = mocker.patch.object(asyncpg, 'connect',
                                           new_callable=AsyncMock)
     connection_mock.return_value = db_connection
+    return db_connection
+
+
+@mark.asyncio
+async def test_get_by_id(db_connection):
     result_id = await db_connection.fetchval(
         'insert into categories ("name", "description") values ($1, $2) '
         'returning id',
@@ -32,10 +37,7 @@ async def test_get_by_id(db_connection, mocker):
 
 
 @mark.asyncio
-async def test_get_by_name(db_connection, mocker):
-    connection_mock = mocker.patch.object(asyncpg, 'connect',
-                                          new_callable=AsyncMock)
-    connection_mock.return_value = db_connection
+async def test_get_by_name(db_connection):
     result_id = await db_connection.fetchval(
         'insert into categories ("name", "description") values ($1, $2) '
         'returning id',
