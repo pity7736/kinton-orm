@@ -10,7 +10,7 @@ class Model(Entity):
         conditions = " AND ".join(
             [f"{field} = ${i}" for i, field in enumerate(criteria.keys(), start=1)]
         )
-        sql = "select * from categories"
+        sql = f"select * from {cls.__name__.lower()}"
         if conditions:
             sql += f' where {conditions}'
 

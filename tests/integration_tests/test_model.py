@@ -23,7 +23,7 @@ def db_connection(db_connection, mocker):
 @mark.asyncio
 async def test_get_by_id(db_connection):
     result_id = await db_connection.fetchval(
-        'insert into categories ("name", "description") values ($1, $2) '
+        'insert into category ("name", "description") values ($1, $2) '
         'returning id',
         "test name",
         "test description"
@@ -39,7 +39,7 @@ async def test_get_by_id(db_connection):
 @mark.asyncio
 async def test_get_by_name(db_connection):
     result_id = await db_connection.fetchval(
-        'insert into categories ("name", "description") values ($1, $2) '
+        'insert into category ("name", "description") values ($1, $2) '
         'returning id',
         "test name",
         "test description"
@@ -54,7 +54,7 @@ async def test_get_by_name(db_connection):
 @mark.asyncio
 async def test_get_by_id_and_name(db_connection):
     result_id = await db_connection.fetchval(
-        'insert into categories ("name", "description") values ($1, $2) '
+        'insert into category ("name", "description") values ($1, $2) '
         'returning id',
         "test name",
         "test description"
@@ -72,7 +72,7 @@ async def test_get_by_id_and_name(db_connection):
 @mark.asyncio
 async def test_get_without_params(db_connection):
     result_id = await db_connection.fetchval(
-        'insert into categories ("name", "description") values ($1, $2) '
+        'insert into category ("name", "description") values ($1, $2) '
         'returning id',
         "test name",
         "test description"
