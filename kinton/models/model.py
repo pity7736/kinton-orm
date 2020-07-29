@@ -4,6 +4,13 @@ from kinton.utils import get_connection
 
 
 class Model(Entity):
+
+    @classmethod
+    async def create(cls, **kwargs):
+        obj = cls(**kwargs)
+        await obj.save()
+        return obj
+
     async def save(self):
         fields = []
         values = []

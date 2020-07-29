@@ -77,8 +77,8 @@ async def test_get_without_params(db_connection):
         "test name",
         "test description"
     )
-    category = await Category.get()
 
+    category = await Category.get()
     assert category.id == result_id
     assert category.name == 'test name'
     assert category.description == 'test description'
@@ -90,7 +90,32 @@ async def test_save(db_connection):
     await new_category.save()
 
     category = await Category.get(id=new_category.id)
+    assert category.id == new_category.id
+    assert category.name == new_category.name
+    assert category.description == new_category.description
 
+
+@mark.asyncio
+async def test_save_with_values_by_setters(db_connection):
+    new_category = Category()
+    new_category.name = 'test name'
+    new_category.description = 'test description'
+    await new_category.save()
+
+    category = await Category.get(id=new_category.id)
+    assert category.id == new_category.id
+    assert category.name == new_category.name
+    assert category.description == new_category.description
+
+
+@mark.asyncio
+async def test_create(db_connection):
+    new_category = await Category.create(
+        name='test name',
+        description='test description'
+    )
+
+    category = await Category.get(id=new_category.id)
     assert category.id == new_category.id
     assert category.name == new_category.name
     assert category.description == new_category.description
