@@ -12,10 +12,31 @@ class Model(Entity):
         return obj
 
     async def save(self):
+        if self.id is None:
+            return await self._insert()
+        await self._update()
+
+    async def _update(self):
         fields = []
         values = []
-        arguments = []
         i = 1
+        for field in self._fields:
+            if field != '_id':
+                field_name = field.replace("_", "", 1)
+                fields.append(f'{field_name} = ${i}')
+                values.append(getattr(self, field_name))
+                i += 1
+        fields = ', '.join(fields)
+        values.append(self._id)
+        sql = f'UPDATE {self.__class__.__name__.lower()} SET {fields} WHERE id = ${i}'
+        connection = await get_connection()
+        await connection.execute(sql, *values)
+
+    async def _insert(self):
+        fields = []
+        values = []
+        i = 1
+        arguments = []
         for field in self._fields:
             if field != "_id":
                 field_name = field.replace("_", "", 1)
@@ -23,7 +44,6 @@ class Model(Entity):
                 values.append(f"${i}")
                 arguments.append(getattr(self, field_name))
                 i += 1
-
         fields = ", ".join(fields)
         values = ", ".join(values)
         connection = await get_connection()
@@ -32,6 +52,7 @@ class Model(Entity):
             f"({values}) returning id",
             *arguments,
         )
+        return
 
     @classmethod
     async def get(cls, **criteria):

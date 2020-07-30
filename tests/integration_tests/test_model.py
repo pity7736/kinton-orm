@@ -100,3 +100,24 @@ async def test_create(db_connection):
     assert category.id == new_category.id
     assert category.name == new_category.name
     assert category.description == new_category.description
+
+
+values = (
+    ('new test name', 'new test name'),
+    (12345, '12345')
+)
+
+
+@mark.parametrize('name, result_name', values)
+@mark.asyncio
+async def test_update_with_save(name, result_name, category_fixture):
+    old_name = category_fixture.name
+    id = category_fixture.id
+    category_fixture.name = name
+    await category_fixture.save()
+
+    category = await Category.get(id=id)
+    assert category.id == category_fixture.id
+    assert category.name != old_name
+    assert category.name == result_name
+    assert category.description == category_fixture.description
