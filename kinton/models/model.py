@@ -11,21 +11,24 @@ class Model(Entity):
         await obj.save()
         return obj
 
-    async def save(self):
+    async def save(self, update_fields=()):
         if self.id is None:
             return await self._insert()
-        await self._update()
+        await self._update(update_fields)
 
-    async def _update(self):
+    async def _update(self, update_fields=()):
         fields = []
         values = []
         i = 1
-        for field in self._fields:
-            if field != '_id':
-                field_name = field.replace("_", "", 1)
-                fields.append(f'{field_name} = ${i}')
-                values.append(getattr(self, field_name))
-                i += 1
+        update_fields = update_fields or self._fields.keys()
+        for field_name in update_fields:
+            field_name = field_name.replace("_", "", 1)
+            field = self._fields.get(f'_{field_name}')
+            if field is None or field_name == 'id':
+                continue
+            fields.append(f'{field_name} = ${i}')
+            values.append(getattr(self, field_name))
+            i += 1
         fields = ', '.join(fields)
         values.append(self._id)
         sql = f'UPDATE {self.__class__.__name__.lower()} SET {fields} WHERE id = ${i}'

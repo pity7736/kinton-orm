@@ -121,3 +121,33 @@ async def test_update_with_save(name, result_name, category_fixture):
     assert category.name != old_name
     assert category.name == result_name
     assert category.description == category_fixture.description
+
+
+@mark.asyncio
+async def test_update_specific_fields(category_fixture):
+    old_description = category_fixture.description
+    old_name = category_fixture.name
+    category_fixture.description = 'new test description'
+    category_fixture.name = 'new test name'
+    await category_fixture.save(update_fields=('description',))
+
+    category = await Category.get(id=category_fixture.id)
+
+    assert category.name == old_name
+    assert category.description != old_description
+    assert category.description == 'new test description'
+
+
+@mark.asyncio
+async def test_update_specific_fields_with_non_existent_fields(category_fixture):
+    old_description = category_fixture.description
+    old_name = category_fixture.name
+    category_fixture.description = 'new test description'
+    category_fixture.name = 'new test name'
+    await category_fixture.save(update_fields=('description', 'non_existent_field'))
+
+    category = await Category.get(id=category_fixture.id)
+
+    assert category.name == old_name
+    assert category.description != old_description
+    assert category.description == 'new test description'
