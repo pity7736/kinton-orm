@@ -1,6 +1,6 @@
 from nyoibo import Entity
 
-from kinton.utils import get_connection
+from kinton.db_client import DBClient
 
 
 class Model(Entity):
@@ -32,8 +32,8 @@ class Model(Entity):
         fields = ', '.join(fields)
         values.append(self._id)
         sql = f'UPDATE {self.__class__.__name__.lower()} SET {fields} WHERE id = ${i}'
-        connection = await get_connection()
-        await connection.execute(sql, *values)
+        db_client = DBClient()
+        await db_client.update(sql, *values)
 
     async def _insert(self):
         fields = []
@@ -49,11 +49,11 @@ class Model(Entity):
                 i += 1
         fields = ", ".join(fields)
         values = ", ".join(values)
-        connection = await get_connection()
-        self._id = await connection.fetchval(
+        db_client = DBClient()
+        self._id = await db_client.insert(
             f"insert into {self.__class__.__name__.lower()} ({fields}) values "
             f"({values}) returning id",
-            *arguments,
+            *arguments
         )
         return
 
@@ -66,6 +66,6 @@ class Model(Entity):
         if conditions:
             sql += f" where {conditions}"
 
-        connection = await get_connection()
-        result = await connection.fetchrow(sql, *criteria.values())
-        return cls(**result)
+        db_client = DBClient()
+        result = await db_client.select(sql, *criteria.values())
+        return cls(**result[0])
