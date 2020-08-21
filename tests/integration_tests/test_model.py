@@ -151,3 +151,13 @@ async def test_update_specific_fields_with_non_existent_fields(category_fixture)
     assert category.name == old_name
     assert category.description != old_description
     assert category.description == 'new test description'
+
+
+def test_override_db_table():
+    class SomeModel(Model):
+        _value = fields.CharField()
+
+        class Meta:
+            db_table = 'another_table_name'
+
+    assert SomeModel.meta.db_table == 'another_table_name'

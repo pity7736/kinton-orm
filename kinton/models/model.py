@@ -1,9 +1,10 @@
 from nyoibo import Entity
 
 from kinton.db_client import DBClient
+from .meta import MetaModel
 
 
-class Model(Entity):
+class Model(Entity, metaclass=MetaModel):
 
     @classmethod
     async def create(cls, **kwargs):
@@ -20,10 +21,10 @@ class Model(Entity):
         fields = []
         values = []
         i = 1
-        update_fields = update_fields or self._fields.keys()
+        update_fields = update_fields or self.meta.fields.keys()
         for field_name in update_fields:
             field_name = field_name.replace("_", "", 1)
-            field = self._fields.get(f'_{field_name}')
+            field = self.meta.fields.get(f'_{field_name}')
             if field is None or field_name == 'id':
                 continue
             fields.append(f'{field_name} = ${i}')
@@ -31,7 +32,7 @@ class Model(Entity):
             i += 1
         fields = ', '.join(fields)
         values.append(self._id)
-        sql = f'UPDATE {self.__class__.__name__.lower()} SET {fields} WHERE id = ${i}'
+        sql = f'UPDATE {self.meta.db_table} SET {fields} WHERE id = ${i}'
         db_client = DBClient()
         await db_client.update(sql, *values)
 
@@ -40,7 +41,7 @@ class Model(Entity):
         values = []
         i = 1
         arguments = []
-        for field in self._fields:
+        for field in self.meta.fields:
             if field != "_id":
                 field_name = field.replace("_", "", 1)
                 fields.append(field_name)
@@ -51,7 +52,7 @@ class Model(Entity):
         values = ", ".join(values)
         db_client = DBClient()
         self._id = await db_client.insert(
-            f"insert into {self.__class__.__name__.lower()} ({fields}) values "
+            f"insert into {self.meta.db_table} ({fields}) values "
             f"({values}) returning id",
             *arguments
         )
@@ -62,7 +63,7 @@ class Model(Entity):
         conditions = " AND ".join(
             [f"{field} = ${i}" for i, field in enumerate(criteria.keys(), start=1)]
         )
-        sql = f"select * from {cls.__name__.lower()}"
+        sql = f"select * from {cls.meta.db_table}"
         if conditions:
             sql += f" where {conditions}"
 
