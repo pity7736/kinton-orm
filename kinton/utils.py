@@ -1,4 +1,5 @@
 import os
+import re
 
 import asyncpg
 from asyncpg import Connection
@@ -13,3 +14,8 @@ async def get_connection() -> Connection:
         port=int(os.environ["KINTON_PORT"]),
     )
     return connection
+
+
+def camel_case_to_snake_case(value):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', value)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()

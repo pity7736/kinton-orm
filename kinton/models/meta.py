@@ -1,5 +1,7 @@
 from nyoibo.entities.meta_entity import MetaEntity
 
+from kinton.utils import camel_case_to_snake_case
+
 
 class Meta:
 
@@ -7,7 +9,7 @@ class Meta:
 
     def __init__(self, model):
         self._fields = model._fields
-        self._db_table = model.__name__.lower()
+        self._db_table = camel_case_to_snake_case(model.__name__)
 
     @property
     def fields(self):

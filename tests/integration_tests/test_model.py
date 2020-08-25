@@ -161,3 +161,18 @@ def test_override_db_table():
             db_table = 'another_table_name'
 
     assert SomeModel.meta.db_table == 'another_table_name'
+
+
+model_names = (
+    ('SomeModel', 'some_model'),
+    ('Category', 'category'),
+    ('NameOfModel', 'name_of_model'),
+    ('Rate1', 'rate1'),
+    ('Rate1OrRate2', 'rate1_or_rate2'),
+)
+
+
+@mark.parametrize('model_name, db_table', model_names)
+def test_db_table_name(model_name, db_table):
+    SomeModel = type(model_name, (Model,), {})
+    assert SomeModel.meta.db_table == db_table
