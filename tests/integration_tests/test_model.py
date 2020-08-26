@@ -4,12 +4,8 @@ import asyncpg
 from pytest import mark, fixture
 
 from kinton import Model, fields
-
-
-class Category(Model):
-    _id = fields.IntegerField()
-    _name = fields.CharField()
-    _description = fields.CharField()
+from tests.factories import CategoryFactory
+from tests.models import Category
 
 
 @fixture
@@ -21,7 +17,7 @@ def db_connection(db_connection, mocker):
 
 @fixture
 async def category_fixture(db_connection):
-    return await Category.create(
+    return await CategoryFactory.create(
         name='test name',
         description='test description'
     )
@@ -91,7 +87,7 @@ async def test_save_with_values_by_setters(db_connection):
 
 @mark.asyncio
 async def test_create(db_connection):
-    new_category = await Category.create(
+    new_category = await CategoryFactory.create(
         name='test name',
         description='test description'
     )
@@ -176,3 +172,16 @@ model_names = (
 def test_db_table_name(model_name, db_table):
     SomeModel = type(model_name, (Model,), {})
     assert SomeModel.meta.db_table == db_table
+
+
+@mark.asyncio
+async def test_all(db_connection):
+    for i in range(5):
+        await CategoryFactory.create(
+            name=f'name test {i}',
+            description=f'description test {i}'
+        )
+
+    categories = await Category.all()
+
+    assert len(categories) == 5

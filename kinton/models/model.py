@@ -70,3 +70,10 @@ class Model(Entity, metaclass=MetaModel):
         db_client = DBClient()
         result = await db_client.select(sql, *criteria.values())
         return cls(**result[0])
+
+    @classmethod
+    async def all(cls):
+        db_client = DBClient()
+        records = await db_client.select(f'select * from {cls.meta.db_table}')
+        result = [cls(**record) for record in records]
+        return result
