@@ -1,9 +1,10 @@
 from unittest.mock import AsyncMock
 
 import asyncpg
-from pytest import mark, fixture
+from pytest import mark, fixture, raises
 
 from kinton import Model, fields
+from kinton.exceptions import FieldDoesNotExists
 from tests.factories import CategoryFactory
 from tests.models import Category
 
@@ -56,6 +57,7 @@ async def test_get_by_id_and_name(category_fixture):
 @mark.asyncio
 async def test_get_without_params(category_fixture):
     category = await Category.get()
+
     assert category.id == category_fixture.id
     assert category.name == 'test name'
     assert category.description == 'test description'
@@ -64,6 +66,7 @@ async def test_get_without_params(category_fixture):
 @mark.asyncio
 async def test_save(db_connection):
     new_category = Category(name='test name', description='test description')
+
     await new_category.save()
 
     category = await Category.get(id=new_category.id)
@@ -77,6 +80,7 @@ async def test_save_with_values_by_setters(db_connection):
     new_category = Category()
     new_category.name = 'test name'
     new_category.description = 'test description'
+
     await new_category.save()
 
     category = await Category.get(id=new_category.id)
@@ -87,7 +91,7 @@ async def test_save_with_values_by_setters(db_connection):
 
 @mark.asyncio
 async def test_create(db_connection):
-    new_category = await CategoryFactory.create(
+    new_category = await Category.create(
         name='test name',
         description='test description'
     )
@@ -110,6 +114,7 @@ async def test_update_with_save(name, result_name, category_fixture):
     old_name = category_fixture.name
     id = category_fixture.id
     category_fixture.name = name
+
     await category_fixture.save()
 
     category = await Category.get(id=id)
@@ -125,10 +130,10 @@ async def test_update_specific_fields(category_fixture):
     old_name = category_fixture.name
     category_fixture.description = 'new test description'
     category_fixture.name = 'new test name'
+
     await category_fixture.save(update_fields=('description',))
 
     category = await Category.get(id=category_fixture.id)
-
     assert category.name == old_name
     assert category.description != old_description
     assert category.description == 'new test description'
@@ -140,10 +145,10 @@ async def test_update_specific_fields_with_non_existent_fields(category_fixture)
     old_name = category_fixture.name
     category_fixture.description = 'new test description'
     category_fixture.name = 'new test name'
+
     await category_fixture.save(update_fields=('description', 'non_existent_field'))
 
     category = await Category.get(id=category_fixture.id)
-
     assert category.name == old_name
     assert category.description != old_description
     assert category.description == 'new test description'
@@ -183,5 +188,36 @@ async def test_all(db_connection):
         )
 
     categories = await Category.all()
-
     assert len(categories) == 5
+
+
+@mark.asyncio
+async def test_filter(category_fixture):
+    categories = await Category.filter(name='test name')
+
+    category = categories[0]
+    assert len(categories) == 1
+    assert category.name == 'test name'
+    assert category.description == 'test description'
+
+
+@mark.asyncio
+async def test_filter_without_records(db_connection):
+    categories = await Category.filter(name='test')
+    assert categories == ()
+
+
+@mark.asyncio
+async def test_filter_without_conditions(db_connection):
+    for _ in range(5):
+        await CategoryFactory.create()
+
+    categories = await Category.filter()
+    assert len(categories) == 5
+
+
+@mark.asyncio
+async def test_with_from_field_condition(db_connection):
+    with raises(FieldDoesNotExists) as e:
+        await Category.filter(non_existing_field='hi')
+    assert str(e.value) == 'category does not have "non_existing_field" field'

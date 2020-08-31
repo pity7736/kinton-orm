@@ -2,6 +2,7 @@ from nyoibo import Entity
 
 from kinton.db_client import DBClient
 from .meta import MetaModel
+from ..exceptions import FieldDoesNotExists
 
 
 class Model(Entity, metaclass=MetaModel):
@@ -76,4 +77,23 @@ class Model(Entity, metaclass=MetaModel):
         db_client = DBClient()
         records = await db_client.select(f'select * from {cls.meta.db_table}')
         result = [cls(**record) for record in records]
+        return result
+
+    @classmethod
+    async def filter(cls, **kwargs):
+        conditions = []
+        for i, field_name in enumerate(kwargs.keys(), start=1):
+            if hasattr(cls, field_name) is False:
+                raise FieldDoesNotExists(f'{cls.meta.db_table} does not have '
+                                         f'"{field_name}" field')
+            conditions.append(f'{field_name} = ${i}')
+
+        sql = f'SELECT * FROM {cls.meta.db_table}'
+        if conditions:
+            conditions = ' AND '.join(conditions)
+            sql += f' WHERE {conditions}'
+
+        db_client = DBClient()
+        records = await db_client.select(sql, *kwargs.values())
+        result = tuple((cls(**record) for record in records))
         return result
