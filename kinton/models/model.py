@@ -3,6 +3,7 @@ from nyoibo import Entity
 from kinton.db_client import DBClient
 from .meta import MetaModel
 from ..exceptions import FieldDoesNotExists
+from ..fields import ForeignKeyField
 
 
 class Model(Entity, metaclass=MetaModel):
@@ -40,11 +41,16 @@ class Model(Entity, metaclass=MetaModel):
     async def _insert(self):
         fields = []
         values = []
-        i = 1
         arguments = []
-        for field in self.meta.fields:
-            if field != "_id":
-                field_name = field.replace("_", "", 1)
+        i = 1
+        for field_name, field in self.meta.fields.items():
+            if field_name.endswith('_id') is False:
+                field_name = field_name.replace("_", "", 1)
+                if isinstance(field, ForeignKeyField):
+                    instance = getattr(self, field_name)
+                    field_name = f'{field_name}_id'
+                    if instance:
+                        setattr(self, field_name, instance.id)
                 fields.append(field_name)
                 values.append(f"${i}")
                 arguments.append(getattr(self, field_name))

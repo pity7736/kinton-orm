@@ -1,4 +1,5 @@
 from nyoibo import fields
+from nyoibo.fields import LinkField
 
 
 class Field:
@@ -18,4 +19,8 @@ class CharField(Field, fields.StrField):
 
 
 class IntegerField(Field, fields.IntField):
+    pass
+
+
+class ForeignKeyField(LinkField):
     pass

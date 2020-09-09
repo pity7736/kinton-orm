@@ -6,7 +6,7 @@ from pytest import mark, fixture, raises
 from kinton import Model, fields
 from kinton.exceptions import FieldDoesNotExists
 from tests.factories import CategoryFactory
-from tests.models import Category
+from tests.models import Category, Post
 
 
 @fixture
@@ -221,3 +221,20 @@ async def test_with_from_field_condition(db_connection):
     with raises(FieldDoesNotExists) as e:
         await Category.filter(non_existing_field='hi')
     assert str(e.value) == 'category does not have "non_existing_field" field'
+
+
+def test_foreign_key_field():
+    post = Post()
+
+    assert post.category is None
+    assert post.category_id is None
+    assert post.tag is None
+    assert post.tag_id is None
+
+
+@mark.asyncio
+async def test_create_with_foreign_key_field(category_fixture):
+    post = await Post.create(title='post title', category=category_fixture)
+
+    assert post.category == category_fixture
+    assert post.category_id == category_fixture.id
