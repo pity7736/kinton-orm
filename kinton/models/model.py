@@ -1,9 +1,9 @@
 from nyoibo import Entity
 
 from kinton.db_client import DBClient
+from kinton.fields import ForeignKeyField
+from kinton.queryset import QuerySet
 from .meta import MetaModel
-from ..exceptions import FieldDoesNotExists
-from ..fields import ForeignKeyField
 
 
 class Model(Entity, metaclass=MetaModel):
@@ -66,40 +66,13 @@ class Model(Entity, metaclass=MetaModel):
         return
 
     @classmethod
-    async def get(cls, **criteria):
-        conditions = " AND ".join(
-            [f"{field} = ${i}" for i, field in enumerate(criteria.keys(), start=1)]
-        )
-        sql = f"select * from {cls.meta.db_table}"
-        if conditions:
-            sql += f" where {conditions}"
-
-        db_client = DBClient()
-        result = await db_client.select(sql, *criteria.values())
-        return cls(**result[0])
+    def get(cls, **criteria):
+        return QuerySet(model=cls).get(**criteria)
 
     @classmethod
-    async def all(cls):
-        db_client = DBClient()
-        records = await db_client.select(f'select * from {cls.meta.db_table}')
-        result = [cls(**record) for record in records]
-        return result
+    def all(cls):
+        return QuerySet(model=cls).all()
 
     @classmethod
-    async def filter(cls, **kwargs):
-        conditions = []
-        for i, field_name in enumerate(kwargs.keys(), start=1):
-            if hasattr(cls, field_name) is False:
-                raise FieldDoesNotExists(f'{cls.meta.db_table} does not have '
-                                         f'"{field_name}" field')
-            conditions.append(f'{field_name} = ${i}')
-
-        sql = f'SELECT * FROM {cls.meta.db_table}'
-        if conditions:
-            conditions = ' AND '.join(conditions)
-            sql += f' WHERE {conditions}'
-
-        db_client = DBClient()
-        records = await db_client.select(sql, *kwargs.values())
-        result = tuple((cls(**record) for record in records))
-        return result
+    def filter(cls, **kwargs):
+        return QuerySet(model=cls).filter(**kwargs)
