@@ -1,5 +1,6 @@
 import asyncio
 import os
+from unittest.mock import AsyncMock
 
 import asyncpg
 import uvloop
@@ -37,16 +38,21 @@ async def db_pool():
         min_size=2
     )
     print('pool created')
+    close = Connection.close
+    Connection.close = AsyncMock()
     yield pool
     print('closing pool')
+    Connection.close = close
     await pool.close()
     print('pool closed')
 
 
 @fixture
-async def db_connection(db_pool, schema):
+async def db_connection(db_pool, schema, mocker):
     connection: Connection = await db_pool.acquire()
     transaction: Transaction = connection.transaction()
+    connect_mock = mocker.patch.object(asyncpg, 'connect', new_callable=AsyncMock)
+    connect_mock.return_value = connection
     await transaction.start()
     await connection.execute(schema)
     yield connection

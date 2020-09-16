@@ -1,19 +1,9 @@
-from unittest.mock import AsyncMock
-
-import asyncpg
 from pytest import mark, fixture, raises
 
 from kinton import Model, fields
 from kinton.exceptions import FieldDoesNotExists
 from tests.factories import CategoryFactory
 from tests.models import Category, Post
-
-
-@fixture
-def db_connection(db_connection, mocker):
-    connection_mock = mocker.patch.object(asyncpg, 'connect', new_callable=AsyncMock)
-    connection_mock.return_value = db_connection
-    return db_connection
 
 
 @fixture

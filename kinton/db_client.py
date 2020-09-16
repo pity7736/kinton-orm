@@ -5,12 +5,17 @@ class DBClient:
 
     async def insert(self, query, *values):
         connection = await get_connection()
-        return await connection.fetchval(query, *values)
+        result = await connection.fetchval(query, *values)
+        await connection.close()
+        return result
 
     async def update(self, query, *values):
         connection = await get_connection()
         await connection.execute(query, *values)
+        await connection.close()
 
     async def select(self, query, *values):
         connection = await get_connection()
-        return await connection.fetch(query, *values)
+        result = await connection.fetch(query, *values)
+        await connection.close()
+        return result
