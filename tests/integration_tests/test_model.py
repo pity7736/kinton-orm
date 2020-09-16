@@ -238,3 +238,11 @@ async def test_create_with_foreign_key_field(category_fixture):
 
     assert post.category == category_fixture
     assert post.category_id == category_fixture.id
+
+
+@mark.asyncio
+async def test_create_with_foreign_key_field_id(category_fixture):
+    post = await Post.create(title='post title', category_id=category_fixture.id)
+
+    assert post.category is None
+    assert post.category_id == category_fixture.id
