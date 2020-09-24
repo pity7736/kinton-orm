@@ -2,6 +2,7 @@ from pytest import mark, fixture, raises
 
 from kinton import Model, fields
 from kinton.exceptions import FieldDoesNotExists
+from kinton.related import Related
 from tests.factories import CategoryFactory
 from tests.models import Category, Post
 
@@ -216,9 +217,9 @@ async def test_with_from_field_condition(db_connection):
 def test_foreign_key_field():
     post = Post()
 
-    assert post.category is None
+    assert isinstance(post.category, Related)
     assert post.category_id is None
-    assert post.tag is None
+    assert isinstance(post.tag, Related)
     assert post.tag_id is None
 
 
@@ -234,5 +235,16 @@ async def test_create_with_foreign_key_field(category_fixture):
 async def test_create_with_foreign_key_field_id(category_fixture):
     post = await Post.create(title='post title', category_id=category_fixture.id)
 
-    assert post.category is None
+    assert isinstance(post.category, Related)
     assert post.category_id == category_fixture.id
+
+
+@mark.asyncio
+async def test_get_related_object(category_fixture):
+    created_post = await Post.create(title='test title', category=category_fixture)
+
+    post = await Post.get(title='test title')
+    await post.category.fetch()
+
+    assert post.id == created_post.id
+    assert post.category.id == category_fixture.id

@@ -4,9 +4,15 @@ from kinton.db_client import DBClient
 from kinton.fields import ForeignKeyField
 from kinton.queryset import QuerySet
 from .meta import MetaModel
+from ..related import Related
 
 
 class Model(Entity, metaclass=MetaModel):
+
+    def _additional_value(self, key, field, value):
+        if isinstance(field, ForeignKeyField) and value is None:
+            return Related(from_instance=self, field_name=key, to_model=field.to)
+        return value
 
     @classmethod
     async def create(cls, **kwargs):
@@ -49,7 +55,7 @@ class Model(Entity, metaclass=MetaModel):
                 if isinstance(field, ForeignKeyField):
                     instance = getattr(self, field_name)
                     field_name = f'{field_name}_id'
-                    if instance:
+                    if isinstance(instance, field.to):
                         setattr(self, field_name, instance.id)
                 fields.append(field_name)
                 values.append(f"${i}")
