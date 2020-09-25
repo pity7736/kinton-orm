@@ -245,9 +245,11 @@ async def test_get_related_object(category_fixture):
 
     post = await Post.get(title='test title')
     await post.category.fetch()
+    await post.tag.fetch()
 
     assert post.id == created_post.id
     assert post.category.id == category_fixture.id
+    assert post.tag is None
 
 
 @mark.asyncio

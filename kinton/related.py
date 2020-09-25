@@ -10,5 +10,7 @@ class Related:
 
     async def fetch(self):
         instance_id = getattr(self._from_instance, f'{self._field_name}_id')
-        instance = await QuerySet(model=self._to_model).get(id=instance_id)
+        instance = None
+        if instance_id:
+            instance = await QuerySet(model=self._to_model).get(id=instance_id)
         setattr(self._from_instance, self._field_name, instance)
