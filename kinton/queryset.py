@@ -1,5 +1,5 @@
 from kinton.db_client import DBClient
-from kinton.exceptions import FieldDoesNotExists
+from kinton.exceptions import FieldDoesNotExists, ObjectDoesNotExists
 
 
 class QuerySet:
@@ -23,6 +23,8 @@ class QuerySet:
 
         db_client = DBClient()
         result = await db_client.select(sql, *criteria.values())
+        if not result:
+            raise ObjectDoesNotExists('Object does not exists')
         return self._model(**result[0])
 
     async def filter(self, **criteria):

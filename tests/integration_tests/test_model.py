@@ -1,7 +1,7 @@
 from pytest import mark, fixture, raises
 
 from kinton import Model, fields
-from kinton.exceptions import FieldDoesNotExists
+from kinton.exceptions import FieldDoesNotExists, ObjectDoesNotExists
 from kinton.related import Related
 from tests.factories import CategoryFactory
 from tests.models import Category, Post
@@ -248,3 +248,17 @@ async def test_get_related_object(category_fixture):
 
     assert post.id == created_post.id
     assert post.category.id == category_fixture.id
+
+
+@mark.asyncio
+async def test_raise_object_does_not_exitst_in_get_query(db_connection):
+    with raises(ObjectDoesNotExists) as e:
+        await Category.get(id=1)
+
+    assert str(e.value) == 'Object does not exists'
+
+
+@mark.asyncio
+async def test_get_or_none(db_connection):
+    category = await Category.get_or_none(id=1)
+    assert category is None
