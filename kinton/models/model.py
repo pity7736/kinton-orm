@@ -75,7 +75,7 @@ class Model(Entity, metaclass=MetaModel):
     @classmethod
     async def get_or_none(cls, **criteria):
         try:
-            return await QuerySet(model=cls).get(**criteria)
+            return await cls.get(**criteria)
         except ObjectDoesNotExists:
             return None
 
@@ -88,5 +88,5 @@ class Model(Entity, metaclass=MetaModel):
         return QuerySet(model=cls).all()
 
     @classmethod
-    def filter(cls, **kwargs):
-        return QuerySet(model=cls).filter(**kwargs)
+    def filter(cls, **criteria):
+        return QuerySet(model=cls).filter(**criteria)
