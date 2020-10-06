@@ -9,3 +9,7 @@ class FieldDoesNotExists(KintonError):
 
 class ObjectDoesNotExists(KintonError):
     pass
+
+
+class MultipleObjectsReturned(KintonError):
+    pass

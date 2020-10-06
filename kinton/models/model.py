@@ -4,7 +4,7 @@ from kinton.db_client import DBClient
 from kinton.fields import ForeignKeyField
 from kinton.queryset import QuerySet
 from .meta import MetaModel
-from ..exceptions import ObjectDoesNotExists
+from ..exceptions import ObjectDoesNotExists, MultipleObjectsReturned
 from ..related import Related
 
 
@@ -76,7 +76,7 @@ class Model(Entity, metaclass=MetaModel):
     async def get_or_none(cls, **criteria):
         try:
             return await cls.get(**criteria)
-        except ObjectDoesNotExists:
+        except (ObjectDoesNotExists, MultipleObjectsReturned):
             return None
 
     @classmethod

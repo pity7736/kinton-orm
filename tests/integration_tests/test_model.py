@@ -1,10 +1,23 @@
 from pytest import mark, fixture, raises
 
 from kinton import Model, fields
-from kinton.exceptions import FieldDoesNotExists, ObjectDoesNotExists
+from kinton.exceptions import FieldDoesNotExists, ObjectDoesNotExists, \
+    MultipleObjectsReturned
 from kinton.related import Related
 from tests.factories import CategoryFactory
 from tests.models import Category, Post
+
+
+# TODO:
+# multiple objects returned exception
+# related queries
+# connection pool
+# prefetch related objects
+# backwards queries
+# testing utils
+# OR queries
+# many to many relationship
+#
 
 
 @fixture
@@ -262,5 +275,19 @@ async def test_raise_object_does_not_exitst_in_get_query(db_connection):
 
 @mark.asyncio
 async def test_get_or_none(db_connection):
-    category = await Category.get_or_none(id=1)
-    assert category is None
+    assert await Category.get_or_none(id=1) is None
+
+
+@mark.asyncio
+async def test_get_or_none_with_multiple_objects(db_connection):
+    await CategoryFactory.create(name='test')
+    await CategoryFactory.create(name='test')
+    assert await Category.get_or_none(name='test') is None
+
+
+@mark.asyncio
+async def test_get_multiple_objects_returned(db_connection):
+    await CategoryFactory.create(name='test')
+    await CategoryFactory.create(name='test')
+    with raises(MultipleObjectsReturned):
+        await Category.get(name='test')

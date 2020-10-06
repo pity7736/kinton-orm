@@ -1,5 +1,6 @@
 from kinton.db_client import DBClient
-from kinton.exceptions import FieldDoesNotExists, ObjectDoesNotExists
+from kinton.exceptions import FieldDoesNotExists, ObjectDoesNotExists, \
+    MultipleObjectsReturned
 
 
 class QuerySet:
@@ -17,7 +18,8 @@ class QuerySet:
         conditions = " AND ".join(
             [f"{field} = ${i}" for i, field in enumerate(criteria.keys(), start=1)]
         )
-        sql = f"select * from {self._model.meta.db_table}"
+        table_name = self._model.meta.db_table
+        sql = f"select * from {table_name}"
         if conditions:
             sql += f" where {conditions}"
 
@@ -25,6 +27,8 @@ class QuerySet:
         result = await db_client.select(sql, *criteria.values())
         if not result:
             raise ObjectDoesNotExists('Object does not exists')
+        if len(result) > 1:
+            raise MultipleObjectsReturned(f'multiple objects {table_name} returned')
         return self._model(**result[0])
 
     async def filter(self, **criteria):
