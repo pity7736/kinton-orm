@@ -14,6 +14,12 @@ class QuerySet:
         result = [self._model(**record) for record in records]
         return result
 
+    async def get_or_none(self, **criteria):
+        try:
+            return await self.get(**criteria)
+        except (ObjectDoesNotExists, MultipleObjectsReturned):
+            return None
+
     async def get(self, **criteria):
         conditions = " AND ".join(
             [f"{field} = ${i}" for i, field in enumerate(criteria.keys(), start=1)]

@@ -9,7 +9,6 @@ from tests.models import Category, Post
 
 
 # TODO:
-# multiple objects returned exception
 # related queries
 # connection pool
 # prefetch related objects
