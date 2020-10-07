@@ -9,7 +9,6 @@ from tests.models import Category, Post
 
 
 # TODO:
-# filter specific fields
 # call filter many times
 # related queries
 # connection pool
@@ -294,3 +293,24 @@ async def test_get_multiple_objects_returned(db_connection):
     await CategoryFactory.create(name='test')
     with raises(MultipleObjectsReturned):
         await Category.get(name='test')
+
+
+@mark.asyncio
+async def test_only_specific_fields(category_fixture):
+    category = await Category.get().only('name')
+    assert category.name == 'test name'
+    assert category.description is None
+
+
+@mark.asyncio
+async def test_only_with_many_fields(category_fixture):
+    category = await Category.get().only('name', 'description')
+    assert category.name == 'test name'
+    assert category.description == 'test description'
+
+
+@mark.asyncio
+async def test_onyl_with_wrong_fields(category_fixture):
+    with raises(FieldDoesNotExists) as e:
+        await Category.get().only('non_existing_field')
+    assert str(e.value) == 'category does not have "non_existing_field" field'

@@ -1,6 +1,6 @@
 from kinton.db_client import DBClient
-from kinton.exceptions import FieldDoesNotExists, ObjectDoesNotExists, \
-    MultipleObjectsReturned
+from kinton.exceptions import ObjectDoesNotExists, MultipleObjectsReturned
+from kinton.utils import validate_model_fields
 
 
 class QuerySet:
@@ -9,20 +9,20 @@ class QuerySet:
         self._model = model
         self._criteria = {}
         self._get = False
+        self._fields = '*'
 
     def __await__(self):
         return self._run_query().__await__()
 
     async def _run_query(self):
         conditions = []
+        validate_model_fields(self._model, self._criteria.keys())
+        validate_model_fields(self._model, self._fields)
         for i, field_name in enumerate(self._criteria.keys(), start=1):
-            if hasattr(self._model, field_name) is False:
-                raise FieldDoesNotExists(f'{self._model.meta.db_table} does not have '
-                                         f'"{field_name}" field')
             conditions.append(f'{field_name} = ${i}')
 
         table_name = self._model.meta.db_table
-        sql = f'SELECT * FROM {table_name}'
+        sql = f'SELECT {self._fields} FROM {table_name}'
         if conditions:
             conditions = ' AND '.join(conditions)
             sql += f' WHERE {conditions}'
@@ -43,10 +43,11 @@ class QuerySet:
         except (ObjectDoesNotExists, MultipleObjectsReturned):
             return None
 
-    def get(self, **criteria):
+    def only(self, *fields) -> 'QuerySet':
         queryset = self.__class__(model=self._model)
-        queryset._criteria = criteria
-        queryset._get = True
+        queryset._get = self._get
+        queryset._criteria = self._criteria
+        queryset._fields = ', '.join(fields)
         return queryset
 
     def all(self) -> 'QuerySet':
@@ -55,4 +56,10 @@ class QuerySet:
     def filter(self, **criteria) -> 'QuerySet':
         queryset = self.__class__(model=self._model)
         queryset._criteria = criteria
+        return queryset
+
+    def get(self, **criteria) -> 'QuerySet':
+        queryset = self.__class__(model=self._model)
+        queryset._criteria = criteria
+        queryset._get = True
         return queryset
