@@ -8,6 +8,7 @@ class QuerySet:
     def __init__(self, model):
         self._model = model
         self._criteria = {}
+        self._get = False
 
     def __await__(self):
         return self._run_query().__await__()
@@ -20,20 +21,21 @@ class QuerySet:
                                          f'"{field_name}" field')
             conditions.append(f'{field_name} = ${i}')
 
-        sql = f'SELECT * FROM {self._model.meta.db_table}'
+        table_name = self._model.meta.db_table
+        sql = f'SELECT * FROM {table_name}'
         if conditions:
             conditions = ' AND '.join(conditions)
             sql += f' WHERE {conditions}'
 
         db_client = DBClient()
         records = await db_client.select(sql, *self._criteria.values())
+        if self._get:
+            if not records:
+                raise ObjectDoesNotExists('Object does not exists')
+            if len(records) > 1:
+                raise MultipleObjectsReturned(f'multiple objects {table_name} returned')
+            return self._model(**records[0])
         return tuple((self._model(**record) for record in records))
-
-    async def all(self):
-        db_client = DBClient()
-        records = await db_client.select(f'select * from {self._model.meta.db_table}')
-        result = [self._model(**record) for record in records]
-        return result
 
     async def get_or_none(self, **criteria):
         try:
@@ -41,22 +43,14 @@ class QuerySet:
         except (ObjectDoesNotExists, MultipleObjectsReturned):
             return None
 
-    async def get(self, **criteria):
-        conditions = " AND ".join(
-            [f"{field} = ${i}" for i, field in enumerate(criteria.keys(), start=1)]
-        )
-        table_name = self._model.meta.db_table
-        sql = f"select * from {table_name}"
-        if conditions:
-            sql += f" where {conditions}"
+    def get(self, **criteria):
+        queryset = self.__class__(model=self._model)
+        queryset._criteria = criteria
+        queryset._get = True
+        return queryset
 
-        db_client = DBClient()
-        result = await db_client.select(sql, *criteria.values())
-        if not result:
-            raise ObjectDoesNotExists('Object does not exists')
-        if len(result) > 1:
-            raise MultipleObjectsReturned(f'multiple objects {table_name} returned')
-        return self._model(**result[0])
+    def all(self) -> 'QuerySet':
+        return self.filter()
 
     def filter(self, **criteria) -> 'QuerySet':
         queryset = self.__class__(model=self._model)
