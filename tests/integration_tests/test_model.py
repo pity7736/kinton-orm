@@ -9,6 +9,8 @@ from tests.models import Category, Post
 
 
 # TODO:
+# filter specific fields
+# call filter many times
 # related queries
 # connection pool
 # prefetch related objects
@@ -29,6 +31,7 @@ async def category_fixture(db_connection):
 
 @mark.asyncio
 async def test_get_by_id(category_fixture):
+    await CategoryFactory.create()
     category = await Category.get(id=category_fixture.id)
 
     assert category.id == category_fixture.id
@@ -196,6 +199,7 @@ async def test_all(db_connection):
 
 @mark.asyncio
 async def test_filter(category_fixture):
+    await CategoryFactory.create(name='test')
     categories = await Category.filter(name='test name')
 
     category = categories[0]
@@ -220,7 +224,7 @@ async def test_filter_without_conditions(db_connection):
 
 
 @mark.asyncio
-async def test_with_from_field_condition(db_connection):
+async def test_with_from_non_existing_field_condition(db_connection):
     with raises(FieldDoesNotExists) as e:
         await Category.filter(non_existing_field='hi')
     assert str(e.value) == 'category does not have "non_existing_field" field'
