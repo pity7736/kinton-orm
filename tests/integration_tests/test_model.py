@@ -9,7 +9,7 @@ from tests.models import Category, Post
 
 
 # TODO:
-# call filter many times
+# make queryset iterable in async way
 # related queries
 # connection pool
 # prefetch related objects
@@ -314,3 +314,29 @@ async def test_onyl_with_wrong_fields(category_fixture):
     with raises(FieldDoesNotExists) as e:
         await Category.get().only('non_existing_field')
     assert str(e.value) == 'category does not have "non_existing_field" field'
+
+
+@mark.asyncio
+async def test_call_filter_many_times(category_fixture):
+    await CategoryFactory.create(name='new category', description='test description')
+    queryset = Category.filter(name='new category')
+    queryset = queryset.filter(description='test description')
+
+    result = await queryset
+    category = result[0]
+
+    assert len(result) == 1
+    assert category.name == 'new category'
+    assert category.description == 'test description'
+
+
+@mark.asyncio
+async def test_call_get_many_times(category_fixture):
+    await CategoryFactory.create(name='new category', description='test description')
+    queryset = Category.get(name='new category')
+    queryset = queryset.get(description='test description')
+
+    category = await queryset
+
+    assert category.name == 'new category'
+    assert category.description == 'test description'

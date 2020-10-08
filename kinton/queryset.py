@@ -55,11 +55,16 @@ class QuerySet:
 
     def filter(self, **criteria) -> 'QuerySet':
         queryset = self.__class__(model=self._model)
-        queryset._criteria = criteria
+        queryset._criteria = self._get_new_criteria(criteria)
         return queryset
 
     def get(self, **criteria) -> 'QuerySet':
         queryset = self.__class__(model=self._model)
-        queryset._criteria = criteria
+        queryset._criteria = self._get_new_criteria(criteria)
         queryset._get = True
         return queryset
+
+    def _get_new_criteria(self, criteria):
+        new_criteria = self._criteria.copy()
+        new_criteria.update(**criteria)
+        return new_criteria
