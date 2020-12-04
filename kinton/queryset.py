@@ -1,5 +1,6 @@
 from kinton.db_client import DBClient
 from kinton.exceptions import ObjectDoesNotExists, MultipleObjectsReturned
+from kinton.queryset_result import QuerySetResult
 from kinton.utils import validate_model_fields
 
 
@@ -35,7 +36,7 @@ class QuerySet:
             if len(records) > 1:
                 raise MultipleObjectsReturned(f'multiple objects {table_name} returned')
             return self._model(**records[0])
-        return tuple((self._model(**record) for record in records))
+        return QuerySetResult(model=self._model, records=records)
 
     async def get_or_none(self, **criteria):
         try:

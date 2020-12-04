@@ -9,7 +9,6 @@ from tests.models import Category, Post
 
 
 # TODO:
-# make queryset iterable in async way
 # related queries
 # connection pool
 # prefetch related objects
@@ -210,7 +209,7 @@ async def test_filter(category_fixture):
 @mark.asyncio
 async def test_filter_without_records(db_connection):
     categories = await Category.filter(name='test')
-    assert categories == ()
+    assert len(categories) == 0
 
 
 @mark.asyncio
@@ -340,3 +339,12 @@ async def test_call_get_many_times(category_fixture):
 
     assert category.name == 'new category'
     assert category.description == 'test description'
+
+
+@mark.asyncio
+async def test_iterate_query_result(category_fixture):
+    categories = await Category.filter(name=category_fixture.name)
+
+    for category in categories:
+        assert category.name == 'test name'
+        assert category.description == 'test description'
