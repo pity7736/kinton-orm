@@ -348,3 +348,16 @@ async def test_iterate_query_result(category_fixture):
     for category in categories:
         assert category.name == 'test name'
         assert category.description == 'test description'
+
+
+@mark.parametrize('times', (2, 3, 4))
+@mark.asyncio
+async def test_iterate_query_result_twice(times, category_fixture):
+    categories = await Category.filter(name=category_fixture.name)
+    count = 0
+    for _ in range(times):
+        for _ in categories:
+            count += 1
+
+    assert count == times
+    assert len(categories) == 1
