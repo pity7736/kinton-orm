@@ -1,11 +1,10 @@
-from pytest import mark, fixture, raises
+from pytest import mark, raises
 
 from kinton import Model, fields
 from kinton.exceptions import FieldDoesNotExists, ObjectDoesNotExists, \
     MultipleObjectsReturned
-from kinton.related import Related
-from tests.factories import CategoryFactory, TagFactory, AuthorFactory
-from tests.models import Category, Post
+from tests.factories import CategoryFactory
+from tests.models import Category
 
 
 # TODO:
@@ -16,14 +15,6 @@ from tests.models import Category, Post
 # testing utils
 # OR queries
 # generate schema
-
-
-@fixture
-async def category_fixture(db_connection):
-    return await CategoryFactory.create(
-        name='test name',
-        description='test description'
-    )
 
 
 @mark.asyncio
@@ -227,44 +218,6 @@ async def test_with_from_non_existing_field_condition(db_connection):
     assert str(e.value) == 'category does not have "non_existing_field" field'
 
 
-def test_foreign_key_field():
-    post = Post()
-
-    assert isinstance(post.category, Related)
-    assert post.category_id is None
-    assert isinstance(post.author, Related)
-    assert post.author_id is None
-
-
-@mark.asyncio
-async def test_create_with_foreign_key_field(category_fixture):
-    post = await Post.create(title='post title', category=category_fixture)
-
-    assert post.category == category_fixture
-    assert post.category_id == category_fixture.id
-
-
-@mark.asyncio
-async def test_create_with_foreign_key_field_id(category_fixture):
-    post = await Post.create(title='post title', category_id=category_fixture.id)
-
-    assert isinstance(post.category, Related)
-    assert post.category_id == category_fixture.id
-
-
-@mark.asyncio
-async def test_get_related_object(category_fixture):
-    created_post = await Post.create(title='test title', category=category_fixture)
-
-    post = await Post.get(title='test title')
-    await post.category.fetch()
-    await post.author.fetch()
-
-    assert post.id == created_post.id
-    assert post.category.id == category_fixture.id
-    assert post.author is None
-
-
 @mark.asyncio
 async def test_raise_object_does_not_exitst_in_get_query(db_connection):
     with raises(ObjectDoesNotExists) as e:
@@ -360,70 +313,3 @@ async def test_iterate_query_result_twice(times, category_fixture):
 
     assert count == times
     assert len(categories) == 1
-
-
-@mark.asyncio
-async def test_add_related_in_many_to_many_relationship(category_fixture,
-                                                        db_connection):
-    author = await AuthorFactory.create()
-    tag = await TagFactory.create()
-    post = await Post.create(
-        title='post title',
-        category=category_fixture,
-        author=author
-    )
-    await post.tag.add(tag)
-
-    result = await db_connection.fetchrow(
-        'select * from post_tag where post_id = $1 and tag_id = $2',
-        post.id,
-        tag.id
-    )
-    assert result['post_id'] == post.id
-    assert result['tag_id'] == tag.id
-
-
-@mark.asyncio
-async def test_add_several_related_in_many_to_many_relationship(category_fixture,
-                                                                db_connection):
-    author = await AuthorFactory.create()
-    tags = await TagFactory.create_batch(2)
-    post = await Post.create(
-        title='post title',
-        category=category_fixture,
-        author=author
-    )
-    await post.tag.add(*tags)
-
-    result = await db_connection.fetch(
-        'select * from post_tag where post_id = $1',
-        post.id,
-    )
-    assert len(result) == 2
-
-
-@mark.asyncio
-async def test_add_empty(category_fixture):
-    author = await AuthorFactory.create()
-    post = await Post.create(
-        title='post title',
-        category=category_fixture,
-        author=author
-    )
-    with raises(AssertionError):
-        await post.tag.add()
-
-
-@mark.asyncio
-async def test_add_wrong_values(category_fixture):
-    author = await AuthorFactory.create()
-    post = await Post.create(
-        title='post title',
-        category=category_fixture,
-        author=author
-    )
-    with raises(ValueError) as e:
-        await post.tag.add(1, 2, 'hi')
-
-    assert str(e.value) == "Related must be <class 'tests.models.Tag'> instance, got " \
-                           "<class 'int'> instead"

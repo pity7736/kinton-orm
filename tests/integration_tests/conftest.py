@@ -9,6 +9,8 @@ from asyncpg.pool import Pool
 from asyncpg.transaction import Transaction
 from pytest import fixture
 
+from tests.factories import CategoryFactory
+
 
 @fixture(scope='session')
 def schema():
@@ -61,3 +63,11 @@ async def db_connection(db_pool, schema, mocker):
     print('rollback done!')
     print('releasing connection')
     await db_pool.release(connection)
+
+
+@fixture
+async def category_fixture(db_connection):
+    return await CategoryFactory.create(
+        name='test name',
+        description='test description'
+    )
