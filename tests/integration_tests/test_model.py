@@ -4,19 +4,18 @@ from kinton import Model, fields
 from kinton.exceptions import FieldDoesNotExists, ObjectDoesNotExists, \
     MultipleObjectsReturned
 from kinton.related import Related
-from tests.factories import CategoryFactory
+from tests.factories import CategoryFactory, TagFactory, AuthorFactory
 from tests.models import Category, Post
 
 
 # TODO:
-# related queries
+# many to many relationship
 # connection pool
 # prefetch related objects
 # backwards queries
 # testing utils
 # OR queries
-# many to many relationship
-#
+# generate schema
 
 
 @fixture
@@ -233,8 +232,8 @@ def test_foreign_key_field():
 
     assert isinstance(post.category, Related)
     assert post.category_id is None
-    assert isinstance(post.tag, Related)
-    assert post.tag_id is None
+    assert isinstance(post.author, Related)
+    assert post.author_id is None
 
 
 @mark.asyncio
@@ -259,11 +258,11 @@ async def test_get_related_object(category_fixture):
 
     post = await Post.get(title='test title')
     await post.category.fetch()
-    await post.tag.fetch()
+    await post.author.fetch()
 
     assert post.id == created_post.id
     assert post.category.id == category_fixture.id
-    assert post.tag is None
+    assert post.author is None
 
 
 @mark.asyncio
@@ -309,7 +308,7 @@ async def test_only_with_many_fields(category_fixture):
 
 
 @mark.asyncio
-async def test_onyl_with_wrong_fields(category_fixture):
+async def test_only_with_wrong_fields(category_fixture):
     with raises(FieldDoesNotExists) as e:
         await Category.get().only('non_existing_field')
     assert str(e.value) == 'category does not have "non_existing_field" field'
@@ -361,3 +360,24 @@ async def test_iterate_query_result_twice(times, category_fixture):
 
     assert count == times
     assert len(categories) == 1
+
+
+@mark.asyncio
+async def test_add_related_in_many_to_many_relationship(category_fixture,
+                                                        db_connection):
+    author = await AuthorFactory.create()
+    tag = await TagFactory.create()
+    post = await Post.create(
+        title='post title',
+        category=category_fixture,
+        author=author
+    )
+    await post.tag.add(tag)
+
+    result = await db_connection.fetchrow(
+        'select * from post_tag where post_id = $1 and tag_id = $2',
+        post.id,
+        tag.id
+    )
+    assert result['post_id'] == post.id
+    assert result['tag_id'] == tag.id

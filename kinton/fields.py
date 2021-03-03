@@ -1,7 +1,6 @@
 from nyoibo import fields
-from nyoibo.fields import LinkField
 
-from kinton.related import Related
+from kinton.related import Related, ManyToManyRelated
 
 
 class Field:
@@ -19,5 +18,9 @@ class IntegerField(Field, fields.IntField):
     pass
 
 
-class ForeignKeyField(Field, LinkField):
+class ForeignKeyField(Field, fields.LinkField):
     _valid_values = (Related,)
+
+
+class ManyToManyField(Field, fields.LinkField):
+    _valid_values = (ManyToManyRelated,)

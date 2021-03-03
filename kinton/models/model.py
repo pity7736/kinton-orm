@@ -1,10 +1,10 @@
 from nyoibo import Entity
 
 from kinton.db_client import DBClient
-from kinton.fields import ForeignKeyField
+from kinton.fields import ForeignKeyField, ManyToManyField
 from kinton.queryset import QuerySet
+from kinton.related import Related, ManyToManyRelated
 from .meta import MetaModel
-from ..related import Related
 
 
 class Model(Entity, metaclass=MetaModel):
@@ -12,6 +12,12 @@ class Model(Entity, metaclass=MetaModel):
     def _additional_value(self, key, field, value):
         if isinstance(field, ForeignKeyField) and value is None:
             return Related(from_instance=self, field_name=key, to_model=field.to)
+        if isinstance(field, ManyToManyField):
+            return ManyToManyRelated(
+                from_instance=self,
+                field_name=key,
+                to_model=field.to
+            )
         return value
 
     @classmethod
@@ -50,7 +56,8 @@ class Model(Entity, metaclass=MetaModel):
         arguments = []
         i = 1
         for field_name, field in self.meta.fields.items():
-            if field_name.endswith('_id') is False:
+            if field_name.endswith('_id') is False and \
+                    isinstance(field, ManyToManyField) is False:
                 field_name = field_name.replace("_", "", 1)
                 if isinstance(field, ForeignKeyField):
                     instance = getattr(self, field_name)
