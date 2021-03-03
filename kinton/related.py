@@ -24,14 +24,25 @@ class ManyToManyRelated:
         self._field_name = field_name
         self._to_model = to_model
 
-    async def add(self, related):
+    async def add(self, *related):
+        assert related
         db_client = DBClient()
         table_name = f'{self._from_instance.meta.db_table}_' \
                      f'{self._to_model.meta.db_table}'
-        query = f'insert into {table_name} ({self._from_instance.meta.db_table}_id,' \
-                f'{self._to_model.meta.db_table}_id) values ($1, $2);'
+        query = f'insert into {table_name} ({self._from_instance.meta.db_table}_id, ' \
+                f'{self._to_model.meta.db_table}_id) values'
+        values = []
+        related_ids = []
+        for i, related in enumerate(related, start=2):
+            if isinstance(related, self._to_model) is False:
+                raise ValueError(f'Related must be {self._to_model} instance, got '
+                                 f'{type(related)} instead')
+            values.append(f'($1, ${i})')
+            related_ids.append(related.id)
+
+        query += f' {", ".join(values)};'
         await db_client.insert(
             query,
             self._from_instance.id,
-            related.id
+            *related_ids
         )

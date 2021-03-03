@@ -381,3 +381,49 @@ async def test_add_related_in_many_to_many_relationship(category_fixture,
     )
     assert result['post_id'] == post.id
     assert result['tag_id'] == tag.id
+
+
+@mark.asyncio
+async def test_add_several_related_in_many_to_many_relationship(category_fixture,
+                                                                db_connection):
+    author = await AuthorFactory.create()
+    tags = await TagFactory.create_batch(2)
+    post = await Post.create(
+        title='post title',
+        category=category_fixture,
+        author=author
+    )
+    await post.tag.add(*tags)
+
+    result = await db_connection.fetch(
+        'select * from post_tag where post_id = $1',
+        post.id,
+    )
+    assert len(result) == 2
+
+
+@mark.asyncio
+async def test_add_empty(category_fixture):
+    author = await AuthorFactory.create()
+    post = await Post.create(
+        title='post title',
+        category=category_fixture,
+        author=author
+    )
+    with raises(AssertionError):
+        await post.tag.add()
+
+
+@mark.asyncio
+async def test_add_wrong_values(category_fixture):
+    author = await AuthorFactory.create()
+    post = await Post.create(
+        title='post title',
+        category=category_fixture,
+        author=author
+    )
+    with raises(ValueError) as e:
+        await post.tag.add(1, 2, 'hi')
+
+    assert str(e.value) == "Related must be <class 'tests.models.Tag'> instance, got " \
+                           "<class 'int'> instead"

@@ -11,6 +11,10 @@ class CreateMixin:
             return await model_class.create(**kwargs)
         return create()
 
+    @classmethod
+    async def create_batch(cls, size, **kwargs):
+        return [await cls.create(**kwargs) for _ in range(size)]
+
 
 class CategoryFactory(CreateMixin, factory.Factory):
     name = 'test name'
