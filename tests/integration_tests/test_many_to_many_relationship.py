@@ -96,3 +96,5 @@ async def test_all(category_fixture):
     assert len(result) == 2
     for tag in result:
         assert isinstance(tag, Tag)
+        assert tag.id
+        assert tag.name
