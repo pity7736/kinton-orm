@@ -24,14 +24,18 @@ class ManyToManyRelated:
         self._from_instance = from_instance
         self._field_name = field_name
         self._to_model = to_model
+        self._table_name = (
+            f'{self._from_instance.meta.db_table}_{self._to_model.meta.db_table}'
+        )
 
     async def add(self, *related):
         assert related
         db_client = DBClient()
-        table_name = f'{self._from_instance.meta.db_table}_' \
-                     f'{self._to_model.meta.db_table}'
-        query = f'insert into {table_name} ({self._from_instance.meta.db_table}_id, ' \
-                f'{self._to_model.meta.db_table}_id) values'
+        query = (
+            f'insert into {self._table_name} '
+            f'({self._from_instance.meta.db_table}_id, '
+            f'{self._to_model.meta.db_table}_id) values'
+        )
         values = []
         related_ids = []
         for i, related in enumerate(related, start=2):
@@ -49,9 +53,7 @@ class ManyToManyRelated:
         )
 
     async def all(self):
-        table_name = f'{self._from_instance.meta.db_table}_' \
-                     f'{self._to_model.meta.db_table}'
-        query = f'select * from {table_name} where ' \
+        query = f'select * from {self._table_name} where ' \
                 f'{self._from_instance.meta.db_table}_id = $1'
         db_client = DBClient()
         records = await db_client.select(query, self._from_instance.id)
