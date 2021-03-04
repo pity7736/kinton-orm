@@ -1,5 +1,6 @@
 from kinton.db_client import DBClient
 from kinton.queryset import QuerySet
+from kinton.queryset_result import QuerySetResult
 
 
 class Related:
@@ -46,3 +47,12 @@ class ManyToManyRelated:
             self._from_instance.id,
             *related_ids
         )
+
+    async def all(self):
+        table_name = f'{self._from_instance.meta.db_table}_' \
+                     f'{self._to_model.meta.db_table}'
+        query = f'select * from {table_name} where ' \
+                f'{self._from_instance.meta.db_table}_id = $1'
+        db_client = DBClient()
+        records = await db_client.select(query, self._from_instance.id)
+        return QuerySetResult(model=self._to_model, records=records)

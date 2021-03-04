@@ -1,7 +1,7 @@
 from pytest import mark, raises
 
 from tests.factories import AuthorFactory, TagFactory
-from tests.models import Post
+from tests.models import Post, Tag
 
 
 @mark.asyncio
@@ -35,10 +35,7 @@ async def test_add_several_related(category_fixture, db_connection):
     )
     await post.tag.add(*tags)
 
-    result = await db_connection.fetch(
-        'select * from post_tag where post_id = $1',
-        post.id,
-    )
+    result = await post.tag.all()
     assert len(result) == 2
 
 
@@ -53,10 +50,7 @@ async def test_add_several_related_with_more_created(category_fixture, db_connec
     )
     await post.tag.add(tag1, tag2)
 
-    result = await db_connection.fetch(
-        'select * from post_tag where post_id = $1',
-        post.id,
-    )
+    result = await post.tag.all()
     assert len(result) == 2
 
 
@@ -85,3 +79,20 @@ async def test_add_wrong_values(category_fixture):
 
     assert str(e.value) == "Related must be <class 'tests.models.Tag'> instance, got " \
                            "<class 'int'> instead"
+
+
+@mark.asyncio
+async def test_all(category_fixture):
+    author = await AuthorFactory.create()
+    tag1, tag2, tag3 = await TagFactory.create_batch(3)
+    post = await Post.create(
+        title='post title',
+        category=category_fixture,
+        author=author
+    )
+    await post.tag.add(tag1, tag2)
+
+    result = await post.tag.all()
+    assert len(result) == 2
+    for tag in result:
+        assert isinstance(tag, Tag)
