@@ -1,4 +1,4 @@
-asyncpg==0.20.1
+asyncpg==0.22.0
 factory-boy==3.0.1
 -e git+ssh://git@github.com/pity7736/nyoibo.git@master#egg=nyoibo
 pre-commit==2.6.0
@@ -9,5 +9,5 @@ pytest-dotenv==0.5.2
 pytest-mock==3.5.1
 sphinx==3.1.2
 sphinx-rtd-theme==0.5.0
-uvloop==0.14.0
+uvloop==0.15.2
 xenon==0.7.0
