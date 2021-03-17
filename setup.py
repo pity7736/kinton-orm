@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 install_requires = [
     'asyncpg==0.22.0',
     'uvloop==0.15.2',
-    'nyoibo==0.1.0'
+    'nyoibo==0.2.0'
 ]
 
 test_require = [
