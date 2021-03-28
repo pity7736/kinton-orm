@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 install_requires = [
     'asyncpg==0.22.0',
     'uvloop==0.15.2',
-    'nyoibo==0.2.0'
+    'nyoibo==0.2.1'
 ]
 
 test_require = [
@@ -18,7 +18,7 @@ with open('README.md') as f:
 
 setup(
     name='kinton-orm',
-    version='0.0.1',
+    version='0.0.2',
     packages=find_packages(),
     install_requires=install_requires,
     author='Julián Cortés',
