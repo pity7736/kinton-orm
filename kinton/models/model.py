@@ -72,8 +72,14 @@ class Model(Entity, metaclass=MetaModel):
         for field_name in update_fields:
             field_name = field_name.replace("_", "", 1)
             field = self.meta.fields.get(f'_{field_name}')
-            if field is None or field_name == 'id':
+            if field is None or field_name == 'id' or \
+                    isinstance(field, (ForeignKeyField, ManyToManyField)):
                 continue
+            if field_name.endswith('_id'):
+                # TODO: refactor this by using custom setter
+                related = getattr(self, field_name.replace('_id', ''))
+                if isinstance(related, Related) is False:
+                    setattr(self, field_name, related.id)
             fields.append(f'{field_name} = ${i}')
             values.append(getattr(self, field_name))
             i += 1
