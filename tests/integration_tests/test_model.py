@@ -328,3 +328,22 @@ async def test_datetime_field_auto_now_add(category_fixture):
         )
 
     assert post.created_at == now
+    assert post.modified_at == now
+
+
+@mark.asyncio
+async def test_same_value_for_auto_now_and_auto_now_add(category_fixture):
+    post = await Post.create(title='test title', category=category_fixture)
+    assert post.created_at == post.modified_at
+
+
+@mark.asyncio
+async def test_datetime_field_auto_now(category_fixture):
+    post = await Post.create(title='test title', category=category_fixture)
+    post.title = 'new test title'
+    now = datetime.datetime.now()
+    with freeze_time(now):
+        await post.save()
+
+    assert post.created_at != post.modified_at
+    assert post.modified_at == now

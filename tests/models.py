@@ -24,3 +24,4 @@ class Post(Model):
     _author = fields.ForeignKeyField(to=Author)
     _tag = fields.ManyToManyField(to=Tag)
     _created_at = fields.DatetimeField(auto_now_add=True)
+    _modified_at = fields.DatetimeField(auto_now=True)

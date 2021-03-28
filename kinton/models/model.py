@@ -38,6 +38,7 @@ class Model(Entity, metaclass=MetaModel):
         values = []
         arguments = []
         i = 1
+        now = datetime.datetime.now()
         for field_name, field in self.meta.fields.items():
             if field_name.endswith('_id') is False and \
                     isinstance(field, ManyToManyField) is False:
@@ -48,8 +49,9 @@ class Model(Entity, metaclass=MetaModel):
                     if isinstance(instance, field.to):
                         setattr(self, field_name, instance.id)
 
-                if isinstance(field, DatetimeField) and field.auto_now_add:
-                    setattr(self, field_name, datetime.datetime.now())
+                if isinstance(field, DatetimeField) and \
+                        (field.auto_now or field.auto_now_add):
+                    setattr(self, field_name, now)
                 fields.append(field_name)
                 values.append(f"${i}")
                 arguments.append(getattr(self, field_name))
@@ -69,6 +71,7 @@ class Model(Entity, metaclass=MetaModel):
         values = []
         i = 1
         update_fields = update_fields or self.meta.fields.keys()
+        now = datetime.datetime.now()
         for field_name in update_fields:
             field_name = field_name.replace("_", "", 1)
             field = self.meta.fields.get(f'_{field_name}')
@@ -80,6 +83,8 @@ class Model(Entity, metaclass=MetaModel):
                 related = getattr(self, field_name.replace('_id', ''))
                 if isinstance(related, Related) is False:
                     setattr(self, field_name, related.id)
+            if isinstance(field, DatetimeField) and field.auto_now:
+                setattr(self, field_name, now)
             fields.append(f'{field_name} = ${i}')
             values.append(getattr(self, field_name))
             i += 1
