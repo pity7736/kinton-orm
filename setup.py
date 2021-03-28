@@ -17,7 +17,7 @@ with open('README.md') as f:
 
 
 setup(
-    name='kinton',
+    name='kinton-orm',
     version='0.0.1',
     packages=find_packages(),
     install_requires=install_requires,

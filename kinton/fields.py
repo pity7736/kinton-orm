@@ -24,3 +24,10 @@ class ForeignKeyField(Field, fields.LinkField):
 
 class ManyToManyField(Field, fields.LinkField):
     _valid_values = (ManyToManyRelated,)
+
+
+class DatetimeField(Field, fields.DatetimeField):
+
+    def __init__(self, auto_now_add=False, **kwargs):
+        super().__init__(**kwargs)
+        self.auto_now_add = auto_now_add

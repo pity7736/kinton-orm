@@ -1,10 +1,13 @@
+import datetime
+
+from freezegun import freeze_time
 from pytest import mark, raises
 
 from kinton import Model, fields
 from kinton.exceptions import FieldDoesNotExists, ObjectDoesNotExists, \
     MultipleObjectsReturned
 from tests.factories import CategoryFactory
-from tests.models import Category
+from tests.models import Category, Post
 
 
 # TODO:
@@ -313,3 +316,15 @@ async def test_iterate_query_result_twice(times, category_fixture):
 
     assert count == times
     assert len(categories) == 1
+
+
+@mark.asyncio
+async def test_datetime_field_auto_now_add(category_fixture):
+    now = datetime.datetime.now()
+    with freeze_time(now):
+        post = await Post.create(
+            title='test title',
+            category=category_fixture
+        )
+
+    assert post.created_at == now
